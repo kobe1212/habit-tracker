@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressRing from "../components/ProgressRing";
 import BottomNav from "../components/BottomNav";
+import Avatar from "../components/Avatar";
 import { useHabitStore } from "../store/HabitStore";
+import { useProfile } from "../store/ProfileStore";
 import { dateUtils } from "../lib/dateUtils";
 import { habitsDueOn, dayProgress, bestCurrentStreak } from "../lib/stats";
 
@@ -16,6 +18,7 @@ function prettyDate(dateStr: string): string {
 export default function Home() {
   const navigate = useNavigate();
   const { habits, completions, isCompleted, toggleCompletion } = useHabitStore();
+  const { profile } = useProfile();
   const today = dateUtils.today();
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -37,11 +40,8 @@ export default function Home() {
             </h1>
             <p className="text-xs text-muted mt-0.5">{prettyDate(selectedDate)}</p>
           </div>
-          <button
-            onClick={() => navigate("/profile")}
-            className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-lg"
-          >
-            🧑‍💼
+          <button onClick={() => navigate("/profile")} aria-label="Profile">
+            <Avatar avatar={profile.avatar} size={36} />
           </button>
         </header>
 

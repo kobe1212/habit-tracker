@@ -1,16 +1,17 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import Toggle from "../components/Toggle";
+import Avatar from "../components/Avatar";
 import { useHabitStore } from "../store/HabitStore";
 import { useTheme } from "../store/ThemeProvider";
+import { useProfile } from "../store/ProfileStore";
 import { bestCurrentStreak, totalCompletions } from "../lib/stats";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { habits, completions, resetData } = useHabitStore();
   const { isDark, setTheme } = useTheme();
-  const [notifications, setNotifications] = useState(true);
+  const { profile, updateProfile } = useProfile();
 
   const dayStreak = bestCurrentStreak(habits, completions);
   const habitsDone = totalCompletions(completions);
@@ -20,6 +21,33 @@ export default function Profile() {
     if (confirm("Reset all data back to the sample habits? This cannot be undone.")) {
       resetData();
       navigate("/");
+    }
+  };
+
+  const handleNotifications = async (on: boolean) => {
+    if (!on) {
+      updateProfile({ notifications: false });
+      return;
+    }
+    if (!("Notification" in window)) {
+      alert("This browser does not support notifications.");
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+    if (permission === "granted") {
+      updateProfile({ notifications: true });
+      const pendingToday = habits.length; // simple nudge
+      new Notification("Habit Tracker", {
+        body: pendingToday
+          ? "Reminders are on — we'll nudge you about your habits!"
+          : "Reminders are on!",
+      });
+    } else {
+      updateProfile({ notifications: false });
+      alert("Notifications are blocked. Please enable them in your browser settings.");
     }
   };
 
@@ -41,13 +69,14 @@ export default function Profile() {
         </header>
 
         {/* User card */}
-        <button className="mt-6 w-full bg-surface rounded-3xl p-4 flex items-center gap-4">
-          <div className="h-14 w-14 rounded-full bg-brand/20 flex items-center justify-center text-2xl">
-            🧑‍💼
-          </div>
+        <button
+          onClick={() => navigate("/profile/edit")}
+          className="mt-6 w-full bg-surface rounded-3xl p-4 flex items-center gap-4"
+        >
+          <Avatar avatar={profile.avatar} size={56} />
           <div className="text-left flex-1">
-            <p className="font-bold text-lg leading-tight">Michal Jackson</p>
-            <p className="text-sm text-muted">michaljksan@gmail.com</p>
+            <p className="font-bold text-lg leading-tight">{profile.name}</p>
+            <p className="text-sm text-muted">Tap to edit your profile</p>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-muted rotate-180">
             <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -65,11 +94,11 @@ export default function Profile() {
 
         {/* Account */}
         <Section title="Account">
-          <Row icon={<PersonIcon />} label="Edit Profile" chevron />
+          <Row icon={<PersonIcon />} label="Edit Profile" chevron onClick={() => navigate("/profile/edit")} />
           <Row
             icon={<BellIcon />}
             label="Notifications"
-            control={<Toggle on={notifications} onChange={setNotifications} />}
+            control={<Toggle on={profile.notifications} onChange={handleNotifications} />}
           />
         </Section>
 
@@ -129,26 +158,37 @@ function Row({
   label,
   chevron,
   control,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   chevron?: boolean;
   control?: React.ReactNode;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-4">
+  const content = (
+    <>
       <span className="h-9 w-9 rounded-xl bg-surface-2 flex items-center justify-center text-fg">
         {icon}
       </span>
-      <span className="flex-1 font-medium">{label}</span>
+      <span className="flex-1 font-medium text-left">{label}</span>
       {control}
       {chevron && (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-muted rotate-180">
           <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-4">
+        {content}
+      </button>
+    );
+  }
+  return <div className="flex items-center gap-3 px-4 py-4">{content}</div>;
 }
 
 function PersonIcon() {
