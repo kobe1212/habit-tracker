@@ -148,6 +148,16 @@ export function weeklyActivity(
   return out;
 }
 
+/** Number of completed habits logged on a single date ("total activity"). */
+export function completionCountOnDate(
+  completions: CompletionData,
+  dateStr: string
+): number {
+  const day = completions[dateStr];
+  if (!day) return 0;
+  return Object.values(day).filter(Boolean).length;
+}
+
 /** Total number of completed entries across all habits and dates. */
 export function totalCompletions(completions: CompletionData): number {
   let count = 0;
