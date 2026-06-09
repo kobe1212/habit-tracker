@@ -1,19 +1,39 @@
 import { useState } from "react";
 import BottomNav from "../components/BottomNav";
+import { useHabitStore } from "../store/HabitStore";
+import { dateUtils } from "../lib/dateUtils";
+import {
+  completionsThisWeek,
+  daysActiveThisWeek,
+  bestCurrentStreak,
+  currentStreak,
+  dayProgress,
+  isHabitDue,
+  isCompleted as isDone,
+} from "../lib/stats";
 
 const ranges = ["Week", "Month", "Year"] as const;
-
-// Mock activity rate over the week (percent values)
-const activity = [40, 62, 48, 75, 58, 70, 66];
-const activityLabels = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function Analytics() {
   const [range, setRange] = useState<(typeof ranges)[number]>("Week");
+  const { habits, completions } = useHabitStore();
+  const today = dateUtils.today();
+
+  const weekCount = completionsThisWeek(habits, completions, today);
+  const activeDays = daysActiveThisWeek(habits, completions, today);
+  const bestStreak = bestCurrentStreak(habits, completions, today);
+
+  // Top habit by current streak
+  const topHabit = habits
+    .map((h) => ({ h, streak: currentStreak(h, completions, today) }))
+    .sort((a, b) => b.streak - a.streak)[0];
+
+  const series = buildSeries(range, habits, completions, today);
 
   return (
     <div className="flex flex-col h-full text-white">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-6 pb-28">
-        {/* Header */}
         <header>
           <h1 className="text-2xl font-bold">Your Analytics</h1>
           <p className="text-sm text-muted mt-1 leading-relaxed">
@@ -39,37 +59,45 @@ export default function Analytics() {
         {/* Summary */}
         <h2 className="text-lg font-bold mt-7">Summary</h2>
         <div className="mt-3 grid grid-cols-2 gap-3">
-          {/* Big highlight card */}
           <div className="row-span-2 bg-brand rounded-3xl p-4 flex flex-col">
-            <span className="text-4xl font-extrabold">8</span>
-            <span className="font-semibold mt-1 leading-tight">
-              Affirmation Completed this week
-            </span>
+            <span className="text-4xl font-extrabold">{weekCount}</span>
+            <span className="font-semibold mt-1 leading-tight">Completions this week</span>
             <span className="text-xs text-white/80 mt-2 leading-relaxed">
-              Your affirmations have boosted your completion rate by 12% this
-              week!
+              Keep showing up — consistency compounds into lasting change.
             </span>
           </div>
 
-          <SummaryStat value="16" label="Days Active" percent={66} />
-          <SummaryStat value="24" label="Streaks Days" percent={80} fire />
+          <SummaryStat value={`${activeDays}`} label="Active Days" percent={(activeDays / 7) * 100} />
+          <SummaryStat value={`${bestStreak}`} label="Streak Days" percent={Math.min(100, bestStreak * 4)} fire />
         </div>
 
         {/* Activity chart */}
         <div className="mt-4 bg-surface rounded-3xl p-4">
           <h3 className="font-semibold">Activity Rate Over Time</h3>
-          <LineChart values={activity} labels={activityLabels} />
+          {series.values.every((v) => v === 0) ? (
+            <p className="text-sm text-muted py-10 text-center">No activity yet for this range.</p>
+          ) : (
+            <LineChart values={series.values} labels={series.labels} />
+          )}
         </div>
 
-        {/* Distraction */}
+        {/* Top habit */}
         <div className="mt-4 bg-surface rounded-3xl p-4 flex items-center justify-between">
           <div>
-            <h3 className="font-semibold">Distraction</h3>
-            <p className="text-xs text-muted mt-1">Most time lost to apps</p>
+            <h3 className="font-semibold">Top Habit</h3>
+            <p className="text-xs text-muted mt-1">Your strongest streak right now</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold">Social Media</p>
-            <p className="text-xs text-brand mt-1">1h 48m today</p>
+            {topHabit && topHabit.streak > 0 ? (
+              <>
+                <p className="text-sm font-semibold">
+                  {topHabit.h.icon} {topHabit.h.name}
+                </p>
+                <p className="text-xs text-brand mt-1">🔥 {topHabit.streak} day streak</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted">No streak yet</p>
+            )}
           </div>
         </div>
       </div>
@@ -77,6 +105,64 @@ export default function Analytics() {
       <BottomNav />
     </div>
   );
+}
+
+function buildSeries(
+  range: (typeof ranges)[number],
+  habits: Parameters<typeof dayProgress>[0],
+  completions: Parameters<typeof dayProgress>[1],
+  today: string
+): { values: number[]; labels: string[] } {
+  if (range === "Week") {
+    const values: number[] = [];
+    const labels: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = dateUtils.subtractDays(today, i);
+      const { completed, total } = dayProgress(habits, completions, date);
+      values.push(total === 0 ? 0 : Math.round((completed / total) * 100));
+      labels.push(dateUtils.getShortDayName(dateUtils.getDayOfWeek(date)));
+    }
+    return { values, labels };
+  }
+
+  if (range === "Month") {
+    const values: number[] = [];
+    const labels: string[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = dateUtils.subtractDays(today, i);
+      const { completed, total } = dayProgress(habits, completions, date);
+      values.push(total === 0 ? 0 : Math.round((completed / total) * 100));
+      const day = dateUtils.parseDate(date).getDate();
+      labels.push(i % 6 === 0 ? String(day) : "");
+    }
+    return { values, labels };
+  }
+
+  // Year: trailing 12 months, average completion % across due days
+  const values: number[] = [];
+  const labels: string[] = [];
+  let cursor = dateUtils.getCurrentMonth();
+  const seq: { year: number; month: number }[] = [];
+  for (let i = 0; i < 12; i++) {
+    seq.unshift({ ...cursor });
+    cursor = dateUtils.getPreviousMonth(cursor.year, cursor.month);
+  }
+  for (const { year, month } of seq) {
+    let due = 0;
+    let done = 0;
+    for (const date of dateUtils.getMonthDates(year, month)) {
+      if (date > today) break;
+      for (const h of habits) {
+        if (isHabitDue(h, date)) {
+          due++;
+          if (isDone(completions, h.id, date)) done++;
+        }
+      }
+    }
+    values.push(due === 0 ? 0 : Math.round((done / due) * 100));
+    labels.push(MONTHS_SHORT[month]);
+  }
+  return { values, labels };
 }
 
 function SummaryStat({
@@ -94,7 +180,7 @@ function SummaryStat({
   const stroke = 4;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (percent / 100) * c;
+  const offset = c - (Math.min(100, percent) / 100) * c;
   return (
     <div className="bg-surface rounded-3xl p-4 flex items-center justify-between">
       <div>
@@ -106,17 +192,7 @@ function SummaryStat({
       </div>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#3a3a3c" strokeWidth={stroke} />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="var(--color-brand)"
-          strokeWidth={stroke}
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-        />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-brand)" strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
       </svg>
     </div>
   );
@@ -148,21 +224,12 @@ function LineChart({ values, labels }: { values: number[]; labels: string[] }) {
           </linearGradient>
         </defs>
         <polygon points={area} fill="url(#areaFill)" />
-        <polyline
-          points={line}
-          fill="none"
-          stroke="var(--color-brand)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <polyline points={line} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx={px} cy={py} r="5" fill="var(--color-brand)" stroke="#1c1c1e" strokeWidth="3" />
       </svg>
       <div className="flex justify-between mt-2">
-        {labels.map((l) => (
-          <span key={l} className="text-[10px] text-muted">
-            {l}
-          </span>
+        {labels.map((l, i) => (
+          <span key={i} className="text-[10px] text-muted">{l}</span>
         ))}
       </div>
     </div>

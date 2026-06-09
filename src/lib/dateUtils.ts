@@ -1,13 +1,16 @@
 export const dateUtils = {
-  // Get today's date in YYYY-MM-DD format
+  // Get today's date in YYYY-MM-DD format (local time)
   today: (): string => {
-    const date = new Date();
-    return date.toISOString().split('T')[0];
+    return dateUtils.formatDate(new Date());
   },
 
-  // Format date object to YYYY-MM-DD
+  // Format date object to YYYY-MM-DD using LOCAL date parts
+  // (avoids the UTC off-by-one-day bug from toISOString()).
   formatDate: (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
 
   // Parse YYYY-MM-DD to Date object

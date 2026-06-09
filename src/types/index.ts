@@ -4,6 +4,7 @@ export interface Habit {
   id: string;
   name: string;
   color: string;
+  icon: string;
   frequency: Frequency;
   createdAt: string;
 }

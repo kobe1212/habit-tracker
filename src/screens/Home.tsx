@@ -1,74 +1,71 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressRing from "../components/ProgressRing";
-import HabitCard from "../components/HabitCard";
 import BottomNav from "../components/BottomNav";
+import { useHabitStore } from "../store/HabitStore";
+import { dateUtils } from "../lib/dateUtils";
+import { habitsDueOn, dayProgress, bestCurrentStreak } from "../lib/stats";
 
-// --- Static mock data (front-end only; wired to real data in a later phase) ---
-const week = [
-  { day: 5, label: "Mon" },
-  { day: 6, label: "Tue" },
-  { day: 7, label: "Wed" },
-  { day: 8, label: "Thu" },
-  { day: 9, label: "Fri" },
-  { day: 10, label: "Sat" },
-  { day: 11, label: "Sun" },
-];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const habits = [
-  { name: "Jogging 5KM", status: "Success", completed: 16, total: 16, icon: "🏃" },
-  { name: "Drink Water", status: "In Progress", completed: 5, total: 8, icon: "💧", highlight: true },
-  { name: "Read a Book", status: "In Progress", completed: 12, total: 30, icon: "📖" },
-  { name: "Meditate", status: "Success", completed: 1, total: 1, icon: "🧘" },
-];
+function prettyDate(dateStr: string): string {
+  const d = dateUtils.parseDate(dateStr);
+  return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
 
 export default function Home() {
-  const [selectedDay, setSelectedDay] = useState(8);
   const navigate = useNavigate();
+  const { habits, completions, isCompleted, toggleCompletion } = useHabitStore();
+  const today = dateUtils.today();
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  const weekDates = dateUtils.getCurrentWeekDates();
+  const dueHabits = habitsDueOn(habits, selectedDate);
+  const { completed, total } = dayProgress(habits, completions, selectedDate);
+  const streak = bestCurrentStreak(habits, completions, today);
+  const isFuture = selectedDate > today;
 
   return (
     <div className="flex flex-col h-full text-white">
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">
-          <button className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted">
-            <Chevron dir="left" />
-          </button>
+          <span className="h-9 w-9" />
           <div className="text-center">
-            <h1 className="text-lg font-bold">Today</h1>
-            <p className="text-xs text-muted mt-0.5">Nov 18, 2024</p>
+            <h1 className="text-lg font-bold">
+              {selectedDate === today ? "Today" : dateUtils.getDayName(dateUtils.getDayOfWeek(selectedDate))}
+            </h1>
+            <p className="text-xs text-muted mt-0.5">{prettyDate(selectedDate)}</p>
           </div>
-          <button className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted">
-            <Chevron dir="right" />
+          <button
+            onClick={() => navigate("/profile")}
+            className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-lg"
+          >
+            🧑‍💼
           </button>
         </header>
 
         {/* Week strip */}
         <div className="flex justify-between mt-6">
-          {week.map(({ day, label }) => {
-            const active = day === selectedDay;
+          {weekDates.map((date) => {
+            const d = dateUtils.parseDate(date);
+            const active = date === selectedDate;
+            const isToday = date === today;
             return (
               <button
-                key={day}
-                onClick={() => setSelectedDay(day)}
+                key={date}
+                onClick={() => setSelectedDate(date)}
                 className="flex flex-col items-center gap-2"
               >
                 <span
                   className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                    active
-                      ? "bg-brand text-white"
-                      : "bg-surface text-white/80"
-                  }`}
+                    active ? "bg-brand text-white" : "bg-surface text-white/80"
+                  } ${isToday && !active ? "ring-1 ring-brand" : ""}`}
                 >
-                  {day}
+                  {d.getDate()}
                 </span>
-                <span
-                  className={`text-[11px] ${
-                    active ? "text-white font-medium" : "text-muted"
-                  }`}
-                >
-                  {label}
+                <span className={`text-[11px] ${active ? "text-white font-medium" : "text-muted"}`}>
+                  {dateUtils.getShortDayName(d.getDay())}
                 </span>
               </button>
             );
@@ -78,14 +75,17 @@ export default function Home() {
         {/* Streak banner */}
         <div className="mt-6 bg-surface rounded-2xl px-4 py-3 flex items-center justify-between">
           <span className="text-sm font-medium">
-            🔥 24 Days Streak. Keep it up!
+            🔥 {streak} Day{streak === 1 ? "" : "s"} Streak. Keep it up!
           </span>
-          <button className="bg-brand text-white text-xs font-semibold px-4 py-2 rounded-xl">
+          <button
+            onClick={() => navigate("/analytics")}
+            className="bg-brand text-white text-xs font-semibold px-4 py-2 rounded-xl"
+          >
             Details
           </button>
         </div>
 
-        {/* Affirmation card */}
+        {/* Affirmation */}
         <div className="mt-4 bg-surface rounded-2xl p-5 relative overflow-hidden">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand/10" />
           <div className="absolute right-6 bottom-2 h-16 w-16 rounded-full bg-brand/5" />
@@ -96,27 +96,59 @@ export default function Home() {
 
         {/* Progress ring */}
         <div className="mt-8 flex justify-center">
-          <ProgressRing completed={16} total={20} />
+          <ProgressRing completed={completed} total={total} />
         </div>
 
-        {/* Habit tracker */}
+        {/* Habit list for the selected day */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Habit Tracker</h2>
-            <button
-              onClick={() => navigate("/habits")}
-              className="text-xs text-brand font-medium"
-            >
+            <h2 className="text-lg font-bold">
+              {selectedDate === today ? "Today's Habits" : "Habits"}
+            </h2>
+            <button onClick={() => navigate("/habits")} className="text-xs text-brand font-medium">
               See all
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-5 px-5">
-            {habits.map((h, i) => (
-              <button key={h.name} onClick={() => navigate(`/habit/${i + 1}`)}>
-                <HabitCard {...h} />
-              </button>
-            ))}
-          </div>
+
+          {dueHabits.length === 0 ? (
+            <div className="bg-surface rounded-2xl p-8 text-center">
+              <p className="text-muted text-sm">
+                {habits.length === 0
+                  ? "No habits yet. Tap + on the Habits tab to create one."
+                  : "No habits scheduled for this day."}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {dueHabits.map((h) => {
+                const done = isCompleted(h.id, selectedDate);
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => !isFuture && toggleCompletion(h.id, selectedDate)}
+                    disabled={isFuture}
+                    className={`rounded-2xl p-4 flex items-center gap-4 text-left transition-colors disabled:opacity-50 ${
+                      done ? "bg-brand/15 ring-1 ring-brand/40" : "bg-surface"
+                    }`}
+                  >
+                    <span
+                      className="h-11 w-11 rounded-2xl flex items-center justify-center text-xl"
+                      style={{ backgroundColor: `${h.color}22` }}
+                    >
+                      {h.icon}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-semibold">{h.name}</p>
+                      <p className={`text-xs mt-0.5 ${done ? "text-brand" : "text-muted"}`}>
+                        {done ? "Completed" : "Pending"}
+                      </p>
+                    </div>
+                    <CheckCircle done={done} color={h.color} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -125,22 +157,20 @@ export default function Home() {
   );
 }
 
-function Chevron({ dir }: { dir: "left" | "right" }) {
+function CheckCircle({ done, color }: { done: boolean; color: string }) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      className={dir === "right" ? "rotate-180" : ""}
+    <span
+      className="h-7 w-7 rounded-full flex items-center justify-center border-2"
+      style={{
+        borderColor: done ? color : "#3a3a3c",
+        backgroundColor: done ? color : "transparent",
+      }}
     >
-      <path
-        d="M15 6l-6 6 6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      {done && (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="m5 12 5 5 9-11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
   );
 }

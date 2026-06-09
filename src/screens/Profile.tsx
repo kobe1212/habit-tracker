@@ -2,11 +2,25 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import Toggle from "../components/Toggle";
+import { useHabitStore } from "../store/HabitStore";
+import { bestCurrentStreak, totalCompletions } from "../lib/stats";
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { habits, completions, resetData } = useHabitStore();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
+
+  const dayStreak = bestCurrentStreak(habits, completions);
+  const habitsDone = totalCompletions(completions);
+  const activeGoals = habits.length;
+
+  const handleReset = () => {
+    if (confirm("Reset all data back to the sample habits? This cannot be undone.")) {
+      resetData();
+      navigate("/");
+    }
+  };
 
   return (
     <div className="flex flex-col h-full text-white">
@@ -41,11 +55,11 @@ export default function Profile() {
 
         {/* Stats row */}
         <div className="mt-3 bg-surface rounded-3xl p-4 flex">
-          <Stat value="21" label="Day Streak" />
+          <Stat value={`${dayStreak}`} label="Day Streak" />
           <Divider />
-          <Stat value="87" label="Habits Done" />
+          <Stat value={`${habitsDone}`} label="Habits Done" />
           <Divider />
-          <Stat value="5" label="Active Goals" />
+          <Stat value={`${activeGoals}`} label="Active Goals" />
         </div>
 
         {/* Account */}
@@ -71,6 +85,12 @@ export default function Profile() {
         <Section title="Support">
           <Row icon={<HelpIcon />} label="Help Center" chevron />
           <Row icon={<StarIcon />} label="Rate the App" chevron />
+          <button onClick={handleReset} className="w-full flex items-center gap-3 px-4 py-4 text-left">
+            <span className="h-9 w-9 rounded-xl bg-surface-2 flex items-center justify-center text-red-400">
+              <ResetIcon />
+            </span>
+            <span className="flex-1 font-medium text-red-400">Reset Demo Data</span>
+          </button>
         </Section>
       </div>
 
@@ -164,6 +184,13 @@ function StarIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function ResetIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v3.5H7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
