@@ -1,12 +1,8 @@
 import React from 'react';
+import StatsDashboard from '../components/StatsDashboard';
 
 const StatsPage: React.FC = () => {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Statistics</h2>
-      <p>Stats dashboard coming soon...</p>
-    </div>
-  );
+  return <StatsDashboard />;
 };
 
 export default StatsPage;
