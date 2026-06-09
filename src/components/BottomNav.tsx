@@ -1,34 +1,37 @@
-interface BottomNavProps {
-  active: string;
-  onChange?: (key: string) => void;
-}
+import { useLocation, useNavigate } from "react-router-dom";
 
 const items = [
-  { key: "home", label: "Home", icon: HomeIcon },
-  { key: "analytics", label: "Analytics", icon: AnalyticsIcon },
-  { key: "habits", label: "Habits", icon: HabitsIcon },
-  { key: "profile", label: "Profile", icon: ProfileIcon },
+  { key: "home", label: "Home", path: "/", icon: HomeIcon },
+  { key: "analytics", label: "Analytics", path: "/analytics", icon: AnalyticsIcon },
+  { key: "habits", label: "Habits", path: "/habits", icon: HabitsIcon },
+  { key: "profile", label: "Profile", path: "/profile", icon: ProfileIcon },
 ];
 
-export default function BottomNav({ active, onChange }: BottomNavProps) {
+export default function BottomNav() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const isActive = (key: string) => {
+    if (key === "home") return pathname === "/";
+    if (key === "habits") return pathname.startsWith("/habit");
+    return pathname.startsWith(`/${key}`);
+  };
+
   return (
     <nav className="absolute bottom-0 inset-x-0 bg-ink/95 backdrop-blur border-t border-white/5 px-6 pt-3 pb-6">
       <ul className="flex items-center justify-between">
-        {items.map(({ key, label, icon: Icon }) => {
-          const isActive = key === active;
+        {items.map(({ key, label, path, icon: Icon }) => {
+          const active = isActive(key);
           return (
             <li key={key}>
               <button
-                onClick={() => onChange?.(key)}
+                onClick={() => navigate(path)}
                 className="flex flex-col items-center gap-1 w-14"
               >
-                <Icon
-                  className={isActive ? "text-brand" : "text-muted"}
-                  active={isActive}
-                />
+                <Icon className={active ? "text-brand" : "text-muted"} />
                 <span
                   className={`text-[11px] font-medium ${
-                    isActive ? "text-brand" : "text-muted"
+                    active ? "text-brand" : "text-muted"
                   }`}
                 >
                   {label}
@@ -44,7 +47,6 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
 
 interface IconProps {
   className?: string;
-  active?: boolean;
 }
 
 function HomeIcon({ className }: IconProps) {

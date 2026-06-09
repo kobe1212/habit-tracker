@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProgressRing from "../components/ProgressRing";
 import HabitCard from "../components/HabitCard";
 import BottomNav from "../components/BottomNav";
@@ -23,6 +24,7 @@ const habits = [
 
 export default function Home() {
   const [selectedDay, setSelectedDay] = useState(8);
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col h-full text-white">
@@ -101,17 +103,24 @@ export default function Home() {
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">Habit Tracker</h2>
-            <button className="text-xs text-brand font-medium">See all</button>
+            <button
+              onClick={() => navigate("/habits")}
+              className="text-xs text-brand font-medium"
+            >
+              See all
+            </button>
           </div>
           <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-5 px-5">
-            {habits.map((h) => (
-              <HabitCard key={h.name} {...h} />
+            {habits.map((h, i) => (
+              <button key={h.name} onClick={() => navigate(`/habit/${i + 1}`)}>
+                <HabitCard {...h} />
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      <BottomNav active="home" />
+      <BottomNav />
     </div>
   );
 }
