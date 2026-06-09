@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import BottomNav from "../components/BottomNav";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
 import {
@@ -176,8 +175,6 @@ export default function HabitDetail() {
           </div>
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

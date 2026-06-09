@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import BottomNav from "../components/BottomNav";
 import Toggle from "../components/Toggle";
 import Avatar from "../components/Avatar";
 import { useHabitStore } from "../store/HabitStore";
@@ -125,8 +124,6 @@ export default function Profile() {
           </button>
         </Section>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

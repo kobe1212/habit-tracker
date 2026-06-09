@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressRing from "../components/ProgressRing";
-import BottomNav from "../components/BottomNav";
 import Avatar from "../components/Avatar";
 import { useHabitStore } from "../store/HabitStore";
 import { useProfile } from "../store/ProfileStore";
@@ -151,8 +150,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

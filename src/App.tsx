@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PhoneFrame from "./components/PhoneFrame";
+import BottomNav from "./components/BottomNav";
 import { HabitStoreProvider } from "./store/HabitStore";
 import { ThemeProvider } from "./store/ThemeProvider";
 import { ProfileProvider } from "./store/ProfileStore";
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/profile/edit" element={<EditProfile />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              <BottomNav />
             </PhoneFrame>
           </BrowserRouter>
         </HabitStoreProvider>

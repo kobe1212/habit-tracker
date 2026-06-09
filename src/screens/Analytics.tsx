@@ -1,5 +1,4 @@
 import { useState } from "react";
-import BottomNav from "../components/BottomNav";
 import ActivityChart, { type ChartPoint } from "../components/ActivityChart";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
@@ -196,8 +195,6 @@ export default function Analytics() {
           </div>
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

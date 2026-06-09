@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import BottomNav from "../components/BottomNav";
 import { useHabitStore } from "../store/HabitStore";
 import { currentStreak } from "../lib/stats";
 
@@ -79,8 +78,6 @@ export default function Habits() {
           </div>
         )}
       </div>
-
-      <BottomNav />
     </div>
   );
 }
