@@ -14,7 +14,7 @@ export default function Habits() {
   const { habits, completions } = useHabitStore();
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-6 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">

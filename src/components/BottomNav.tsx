@@ -18,7 +18,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="absolute bottom-0 inset-x-0 bg-ink/95 backdrop-blur border-t border-white/5 px-6 pt-3 pb-6">
+    <nav className="absolute bottom-0 inset-x-0 bg-ink/95 backdrop-blur border-t border-line px-6 pt-3 pb-6">
       <ul className="flex items-center justify-between">
         {items.map(({ key, label, path, icon: Icon }) => {
           const active = isActive(key);

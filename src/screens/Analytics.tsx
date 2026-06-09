@@ -32,7 +32,7 @@ export default function Analytics() {
   const series = buildSeries(range, habits, completions, today);
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-6 pb-28">
         <header>
           <h1 className="text-2xl font-bold">Your Analytics</h1>
@@ -191,7 +191,7 @@ function SummaryStat({
         </p>
       </div>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#3a3a3c" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-surface-2)" strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-brand)" strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
       </svg>
     </div>
@@ -225,7 +225,7 @@ function LineChart({ values, labels }: { values: number[]; labels: string[] }) {
         </defs>
         <polygon points={area} fill="url(#areaFill)" />
         <polyline points={line} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={px} cy={py} r="5" fill="var(--color-brand)" stroke="#1c1c1e" strokeWidth="3" />
+        <circle cx={px} cy={py} r="5" fill="var(--color-brand)" stroke="var(--color-surface)" strokeWidth="3" />
       </svg>
       <div className="flex justify-between mt-2">
         {labels.map((l, i) => (

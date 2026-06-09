@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import Toggle from "../components/Toggle";
 import { useHabitStore } from "../store/HabitStore";
+import { useTheme } from "../store/ThemeProvider";
 import { bestCurrentStreak, totalCompletions } from "../lib/stats";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { habits, completions, resetData } = useHabitStore();
+  const { isDark, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
 
   const dayStreak = bestCurrentStreak(habits, completions);
   const habitsDone = totalCompletions(completions);
@@ -23,7 +24,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -77,7 +78,9 @@ export default function Profile() {
           <Row
             icon={<SunIcon />}
             label="Dark Mode"
-            control={<Toggle on={darkMode} onChange={setDarkMode} />}
+            control={
+              <Toggle on={isDark} onChange={(on) => setTheme(on ? "dark" : "light")} />
+            }
           />
         </Section>
 
@@ -109,14 +112,14 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 function Divider() {
-  return <span className="w-px bg-white/10 my-1" />;
+  return <span className="w-px bg-line my-1" />;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-7">
       <h2 className="text-lg font-bold mb-3">{title}</h2>
-      <div className="bg-surface rounded-3xl divide-y divide-white/5">{children}</div>
+      <div className="bg-surface rounded-3xl divide-y divide-line">{children}</div>
     </div>
   );
 }
@@ -134,7 +137,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-4">
-      <span className="h-9 w-9 rounded-xl bg-surface-2 flex items-center justify-center text-white">
+      <span className="h-9 w-9 rounded-xl bg-surface-2 flex items-center justify-center text-fg">
         {icon}
       </span>
       <span className="flex-1 font-medium">{label}</span>

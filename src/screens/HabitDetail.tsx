@@ -24,7 +24,7 @@ export default function HabitDetail() {
 
   if (!habit) {
     return (
-      <div className="flex flex-col h-full text-white items-center justify-center px-5">
+      <div className="flex flex-col h-full text-fg items-center justify-center px-5">
         <p className="text-muted">Habit not found.</p>
         <button onClick={() => navigate("/habits")} className="mt-4 bg-brand px-5 py-2.5 rounded-xl font-semibold">
           Back to Habits
@@ -64,7 +64,7 @@ export default function HabitDetail() {
   const nextMonth = () => setView(dateUtils.getNextMonth(view.year, view.month));
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export default function HabitDetail() {
                     onClick={() => !isFuture && due && toggleCompletion(habit.id, dateStr)}
                     disabled={isFuture || !due}
                     className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                      success ? "bg-brand text-white" : skipped ? "bg-surface-2 text-muted" : "text-white/80"
+                      success ? "bg-brand text-white" : skipped ? "bg-surface-2 text-muted" : "text-fg/80"
                     } ${dateStr === today ? "ring-1 ring-brand" : ""}`}
                   >
                     {String(day).padStart(2, "0")}

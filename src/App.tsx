@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PhoneFrame from "./components/PhoneFrame";
 import { HabitStoreProvider } from "./store/HabitStore";
+import { ThemeProvider } from "./store/ThemeProvider";
 import Home from "./screens/Home";
 import Analytics from "./screens/Analytics";
 import Habits from "./screens/Habits";
@@ -10,8 +11,9 @@ import Profile from "./screens/Profile";
 
 function App() {
   return (
-    <HabitStoreProvider>
-      <BrowserRouter>
+    <ThemeProvider>
+      <HabitStoreProvider>
+        <BrowserRouter>
         <PhoneFrame>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -23,9 +25,10 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </PhoneFrame>
-      </BrowserRouter>
-    </HabitStoreProvider>
+          </PhoneFrame>
+        </BrowserRouter>
+      </HabitStoreProvider>
+    </ThemeProvider>
   );
 }
 

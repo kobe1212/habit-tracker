@@ -59,7 +59,7 @@ export default function HabitForm() {
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -93,7 +93,7 @@ export default function HabitForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Drink 2L of water"
-            className="mt-2 w-full bg-surface rounded-2xl px-4 py-3.5 text-white placeholder:text-muted outline-none focus:ring-2 focus:ring-brand"
+            className="mt-2 w-full bg-surface rounded-2xl px-4 py-3.5 text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-brand"
           />
         </label>
 
@@ -124,7 +124,7 @@ export default function HabitForm() {
                 key={c}
                 onClick={() => setColor(c)}
                 className={`h-9 w-9 rounded-full ${
-                  color === c ? "ring-2 ring-white ring-offset-2 ring-offset-ink" : ""
+                  color === c ? "ring-2 ring-fg ring-offset-2 ring-offset-ink" : ""
                 }`}
                 style={{ backgroundColor: c }}
               />

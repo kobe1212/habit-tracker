@@ -26,7 +26,7 @@ export default function Home() {
   const isFuture = selectedDate > today;
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -59,12 +59,12 @@ export default function Home() {
               >
                 <span
                   className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                    active ? "bg-brand text-white" : "bg-surface text-white/80"
+                    active ? "bg-brand text-white" : "bg-surface text-fg/80"
                   } ${isToday && !active ? "ring-1 ring-brand" : ""}`}
                 >
                   {d.getDate()}
                 </span>
-                <span className={`text-[11px] ${active ? "text-white font-medium" : "text-muted"}`}>
+                <span className={`text-[11px] ${active ? "text-fg font-medium" : "text-muted"}`}>
                   {dateUtils.getShortDayName(d.getDay())}
                 </span>
               </button>
@@ -162,7 +162,7 @@ function CheckCircle({ done, color }: { done: boolean; color: string }) {
     <span
       className="h-7 w-7 rounded-full flex items-center justify-center border-2"
       style={{
-        borderColor: done ? color : "#3a3a3c",
+        borderColor: done ? color : "var(--color-surface-2)",
         backgroundColor: done ? color : "transparent",
       }}
     >

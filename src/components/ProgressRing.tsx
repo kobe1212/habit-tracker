@@ -41,7 +41,7 @@ export default function ProgressRing({
               y1={y1}
               x2={x2}
               y2={y2}
-              stroke={active ? "var(--color-brand)" : "#2c2c2e"}
+              stroke={active ? "var(--color-brand)" : "var(--color-surface-2)"}
               strokeWidth={3}
               strokeLinecap="round"
             />
@@ -52,7 +52,7 @@ export default function ProgressRing({
         <span className="text-sm text-muted">
           {completed}/{total}
         </span>
-        <span className="text-5xl font-bold text-white leading-none mt-1">
+        <span className="text-5xl font-bold text-fg leading-none mt-1">
           {percent}%
         </span>
         <span className="text-xs text-muted mt-2">Task Completed</span>
