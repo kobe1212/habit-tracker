@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export interface ChartPoint {
   label: string;
@@ -77,14 +78,23 @@ export default function ActivityChart({ points }: { points: ChartPoint[] }) {
           );
         })}
 
-        <polygon points={areaPts} fill="url(#activityFill)" />
-        <polyline
+        <motion.polygon
+          points={areaPts}
+          fill="url(#activityFill)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45, duration: 0.5 }}
+        />
+        <motion.polyline
           points={linePts}
           fill="none"
           stroke="var(--color-brand)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
         />
 
         {/* Hover guide line + active dot */}

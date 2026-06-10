@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
+import CountUp from "../components/CountUp";
+import YearBarChart, { type YearBar } from "../components/YearBarChart";
 import {
   isHabitDue,
   isCompleted as isDone,
@@ -12,6 +15,12 @@ import {
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const calendarVariants = {
+  enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir * -60, opacity: 0 }),
+};
+
 export default function HabitDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -20,6 +29,7 @@ export default function HabitDetail() {
 
   const initial = dateUtils.getCurrentMonth();
   const [view, setView] = useState(initial);
+  const [calDirection, setCalDirection] = useState(0);
 
   if (!habit) {
     return (
@@ -39,28 +49,37 @@ export default function HabitDetail() {
   const consistency = monthlyConsistency(habit, completions, view.year, view.month, today);
 
   // --- Year to date: completions per trailing 12 months ---
-  const yearBars: { label: string; value: number }[] = [];
   let cursor = dateUtils.getCurrentMonth();
   const seq: { year: number; month: number }[] = [];
   for (let i = 0; i < 12; i++) {
     seq.unshift({ ...cursor });
     cursor = dateUtils.getPreviousMonth(cursor.year, cursor.month);
   }
-  for (const { year, month } of seq) {
-    const count = dateUtils
+  const yearBars: YearBar[] = seq.map(({ year, month }) => ({
+    label: MONTHS_SHORT[month],
+    fullLabel: `${MONTHS_SHORT[month]} ${year}`,
+    year,
+    month,
+    value: dateUtils
       .getMonthDates(year, month)
-      .filter((d) => d <= today && isDone(completions, habit.id, d)).length;
-    yearBars.push({ label: MONTHS_SHORT[month], value: count });
-  }
-  const maxBar = Math.max(...yearBars.map((b) => b.value), 1);
+      .filter((d) => d <= today && isDone(completions, habit.id, d)).length,
+  }));
 
   // --- Month calendar grid (Monday-first) ---
   const startDay = dateUtils.getMonthStartDay(view.year, view.month); // 0=Sun
   const leadingBlanks = (startDay + 6) % 7;
   const daysInMonth = dateUtils.getDaysInMonth(view.year, view.month);
 
-  const prevMonth = () => setView(dateUtils.getPreviousMonth(view.year, view.month));
-  const nextMonth = () => setView(dateUtils.getNextMonth(view.year, view.month));
+  const goToMonth = (target: { year: number; month: number }) => {
+    if (target.year === view.year && target.month === view.month) return;
+    const dir =
+      target.year * 12 + target.month > view.year * 12 + view.month ? 1 : -1;
+    setCalDirection(dir);
+    setView(target);
+  };
+
+  const prevMonth = () => goToMonth(dateUtils.getPreviousMonth(view.year, view.month));
+  const nextMonth = () => goToMonth(dateUtils.getNextMonth(view.year, view.month));
 
   return (
     <div className="flex flex-col h-full text-fg">
@@ -97,26 +116,22 @@ export default function HabitDetail() {
 
         {/* Stats row */}
         <div className="mt-5 grid grid-cols-3 gap-3">
-          <StatBox value={`${cur}`} label="Current 🔥" />
-          <StatBox value={`${longest}`} label="Longest ⭐" />
-          <StatBox value={`${consistency}%`} label="This month" />
+          <StatBox value={cur} label="Current 🔥" />
+          <StatBox value={longest} label="Longest ⭐" />
+          <StatBox value={consistency} suffix="%" label="This month" />
         </div>
 
         {/* Year to date progress */}
         <div className="mt-4 bg-surface rounded-3xl p-4">
-          <h3 className="font-semibold">Year to Date Progress</h3>
-          <div className="mt-4 flex items-end justify-between gap-1 h-36">
-            {yearBars.map((b, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                <div className="w-full rounded-md bg-brand" style={{ height: `${(b.value / maxBar) * 100}%`, minHeight: b.value > 0 ? 4 : 0 }} />
-                <span className="text-[8px] text-muted">{b.label}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Year to Date Progress</h3>
+            <span className="text-[11px] text-muted">Completions</span>
           </div>
+          <YearBarChart bars={yearBars} selected={view} onSelectMonth={goToMonth} />
         </div>
 
         {/* Monthly calendar */}
-        <div className="mt-4 bg-surface rounded-3xl p-4">
+        <div className="mt-4 bg-surface rounded-3xl p-4 overflow-hidden">
           <div className="flex items-center justify-between">
             <button onClick={prevMonth} className="h-8 w-8 rounded-full bg-surface-2 flex items-center justify-center text-muted">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -139,31 +154,42 @@ export default function HabitDetail() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-y-2">
-            {Array.from({ length: leadingBlanks }).map((_, i) => <span key={`b${i}`} />)}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const dateStr = `${view.year}-${String(view.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-              const due = isHabitDue(habit, dateStr);
-              const done = isDone(completions, habit.id, dateStr);
-              const success = due && done;
-              const skipped = due && !done && dateStr < today;
-              const isFuture = dateStr > today;
-              return (
-                <div key={day} className="flex justify-center">
-                  <button
-                    onClick={() => !isFuture && due && toggleCompletion(habit.id, dateStr)}
-                    disabled={isFuture || !due}
-                    className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                      success ? "bg-brand text-white" : skipped ? "bg-surface-2 text-muted" : "text-fg/80"
-                    } ${dateStr === today ? "ring-1 ring-brand" : ""}`}
-                  >
-                    {String(day).padStart(2, "0")}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          <AnimatePresence mode="wait" custom={calDirection} initial={false}>
+            <motion.div
+              key={`${view.year}-${view.month}`}
+              custom={calDirection}
+              variants={calendarVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="grid grid-cols-7 gap-y-2"
+            >
+              {Array.from({ length: leadingBlanks }).map((_, i) => <span key={`b${i}`} />)}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const dateStr = `${view.year}-${String(view.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const due = isHabitDue(habit, dateStr);
+                const done = isDone(completions, habit.id, dateStr);
+                const success = due && done;
+                const skipped = due && !done && dateStr < today;
+                const isFuture = dateStr > today;
+                return (
+                  <div key={day} className="flex justify-center">
+                    <button
+                      onClick={() => !isFuture && due && toggleCompletion(habit.id, dateStr)}
+                      disabled={isFuture || !due}
+                      className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-medium ${
+                        success ? "bg-brand text-white" : skipped ? "bg-surface-2 text-muted" : "text-fg/80"
+                      } ${dateStr === today ? "ring-1 ring-brand" : ""}`}
+                    >
+                      {String(day).padStart(2, "0")}
+                    </button>
+                  </div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
 
           <div className="flex items-center gap-5 mt-5">
             <span className="flex items-center gap-2 text-xs text-muted">
@@ -179,10 +205,10 @@ export default function HabitDetail() {
   );
 }
 
-function StatBox({ value, label }: { value: string; label: string }) {
+function StatBox({ value, suffix = "", label }: { value: number; suffix?: string; label: string }) {
   return (
     <div className="bg-surface rounded-2xl p-3 text-center">
-      <p className="text-xl font-extrabold">{value}</p>
+      <CountUp value={value} suffix={suffix} className="text-xl font-extrabold" />
       <p className="text-[11px] text-muted mt-1">{label}</p>
     </div>
   );

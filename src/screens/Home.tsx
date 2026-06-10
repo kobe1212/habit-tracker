@@ -151,15 +151,16 @@ export default function Home() {
           </AnimatePresence>
         </div>
 
-        {/* Streak badge */}
-        <div className="mt-6 flex justify-center">
+        {/* Streak badge (horizontal banner) */}
+        <div className="mt-6">
           <StreakBadge
             length={streak}
             frequency="daily"
-            subtitle="streak — keep it up!"
+            size="sm"
+            subtitle="— keep it up!"
             icon={<AnimatedFlame />}
             onClick={() => navigate("/analytics")}
-            className="cursor-pointer w-44"
+            className="w-full flex-row justify-start gap-3 rounded-2xl px-4 py-3 cursor-pointer"
           />
         </div>
 
@@ -237,10 +238,10 @@ function AnimatedFlame() {
         rotate: [0, -4, 3, -2, 0],
       }}
       transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-      style={{ filter: "drop-shadow(0 0 10px rgba(249, 115, 22, 0.45))" }}
+      style={{ filter: "drop-shadow(0 0 8px rgba(249, 115, 22, 0.45))" }}
       aria-hidden="true"
     >
-      <Flame className="h-16 w-16 text-orange-500 shrink-0" fill="currentColor" fillOpacity={0.25} />
+      <Flame className="h-7 w-7 text-orange-500 shrink-0" fill="currentColor" fillOpacity={0.25} />
     </motion.div>
   );
 }

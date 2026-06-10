@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import ActivityChart, { type ChartPoint } from "../components/ActivityChart";
+import CountUp from "../components/CountUp";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
 import {
@@ -157,15 +158,26 @@ export default function Analytics() {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="row-span-2 bg-brand rounded-3xl p-4 flex flex-col">
-            <span className="text-4xl font-extrabold">{a.total}</span>
+            <CountUp value={a.total} className="text-4xl font-extrabold" />
             <span className="font-semibold mt-1 leading-tight">Completions this {a.periodWord}</span>
             <span className="text-xs text-white/80 mt-2 leading-relaxed">
               Keep showing up — consistency compounds into lasting change.
             </span>
           </div>
 
-          <SummaryStat value={`${a.activeDays}`} label="Active Days" percent={(a.activeDays / a.daysElapsed) * 100} />
-          <SummaryStat value={`${a.consistency}%`} label="Consistency" percent={a.consistency} />
+          <SummaryStat
+            value={a.activeDays}
+            label="Active Days"
+            detail={`of ${a.daysElapsed} day${a.daysElapsed === 1 ? "" : "s"} so far`}
+            percent={(a.activeDays / a.daysElapsed) * 100}
+          />
+          <SummaryStat
+            value={a.consistency}
+            suffix="%"
+            label="Consistency"
+            detail="of scheduled habits done"
+            percent={a.consistency}
+          />
         </div>
 
         {/* Activity chart */}
@@ -175,7 +187,7 @@ export default function Analytics() {
             <span className="text-[11px] text-muted">Total Activity</span>
           </div>
           {hasActivity ? (
-            <ActivityChart points={a.chart} />
+            <ActivityChart key={range} points={a.chart} />
           ) : (
             <p className="text-sm text-muted py-10 text-center">No activity yet for this {a.periodWord}.</p>
           )}
@@ -207,21 +219,46 @@ export default function Analytics() {
   );
 }
 
-function SummaryStat({ value, label, percent }: { value: string; label: string; percent: number }) {
+function SummaryStat({
+  value,
+  suffix = "",
+  label,
+  detail,
+  percent,
+}: {
+  value: number;
+  suffix?: string;
+  label: string;
+  detail?: string;
+  percent: number;
+}) {
   const size = 40;
   const stroke = 4;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (Math.min(100, Math.max(0, percent)) / 100) * c;
   return (
-    <div className="bg-surface rounded-3xl p-4 flex items-center justify-between">
-      <div>
-        <span className="text-2xl font-extrabold">{value}</span>
+    <div className="bg-surface rounded-3xl p-4 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <CountUp value={value} suffix={suffix} className="text-2xl font-extrabold" />
         <p className="text-xs text-muted mt-1">{label}</p>
+        {detail && <p className="text-[10px] text-muted/80 mt-0.5 leading-tight">{detail}</p>}
       </div>
-      <svg width={size} height={size} className="-rotate-90">
+      <svg width={size} height={size} className="-rotate-90 shrink-0">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-surface-2)" strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-brand)" strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="var(--color-brand)"
+          strokeWidth={stroke}
+          strokeDasharray={c}
+          strokeLinecap="round"
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        />
       </svg>
     </div>
   );

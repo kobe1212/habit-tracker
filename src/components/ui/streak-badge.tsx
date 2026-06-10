@@ -32,7 +32,7 @@ const streakBadgeVariants = cva(
 // Props
 interface StreakBadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof streakBadgeVariants> {
+  VariantProps<typeof streakBadgeVariants> {
   /** Streak length value */
   length?: number;
   /** Streak frequency used for label rendering */
