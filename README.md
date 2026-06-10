@@ -5,7 +5,7 @@ habits, mark them complete on a calendar, and watch their progress through strea
 consistency, and an analytics dashboard — all wrapped in a dark, mobile-first UI with fluid
 animations.
 
-- **Live demo:** <LIVE_URL>
+- **Live demo:** https://habit-tracker-zeta-lake.vercel.app/
 - **Repository:** https://github.com/kobe1212/habit-tracker
 
 > Data is stored locally in your browser (no account, no backend). The deployed app seeds a few
