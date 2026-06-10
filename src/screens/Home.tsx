@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { Flame } from "lucide-react";
 import ProgressRing from "../components/ProgressRing";
 import Avatar from "../components/Avatar";
+import { StreakBadge } from "@/components/ui/streak-badge";
 import { useHabitStore } from "../store/HabitStore";
 import { useProfile } from "../store/ProfileStore";
 import { dateUtils } from "../lib/dateUtils";
@@ -15,14 +17,42 @@ function prettyDate(dateStr: string): string {
   return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "morning";
+  if (h < 18) return "afternoon";
+  return "evening";
+}
+
+const weekVariants = {
+  enter: (dir: number) => ({ x: dir * 70, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir * -70, opacity: 0 }),
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const { habits, completions, isCompleted, toggleCompletion } = useHabitStore();
   const { profile } = useProfile();
   const today = dateUtils.today();
   const [selectedDate, setSelectedDate] = useState(today);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [direction, setDirection] = useState(0);
 
-  const weekDates = dateUtils.getCurrentWeekDates();
+  const weekDates = dateUtils
+    .getCurrentWeekDates()
+    .map((d) => dateUtils.addDays(d, weekOffset * 7));
+
+  const changeWeek = (delta: number) => {
+    const next = weekOffset + delta;
+    setDirection(delta);
+    setWeekOffset(next);
+    // Land on today when returning to the current week, else on that week's Monday.
+    setSelectedDate(
+      next === 0 ? today : dateUtils.addDays(dateUtils.getCurrentWeekDates()[0], next * 7)
+    );
+  };
+
   const dueHabits = habitsDueOn(habits, selectedDate);
   const { completed, total } = dayProgress(habits, completions, selectedDate);
   const streak = bestCurrentStreak(habits, completions, today);
@@ -31,78 +61,110 @@ export default function Home() {
   return (
     <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <span className="h-9 w-9" />
-          <div className="text-center">
-            <h1 className="text-lg font-bold">
-              {selectedDate === today ? "Today" : dateUtils.getDayName(dateUtils.getDayOfWeek(selectedDate))}
-            </h1>
-            <p className="text-xs text-muted mt-0.5">{prettyDate(selectedDate)}</p>
-          </div>
-          <button onClick={() => navigate("/profile")} aria-label="Profile">
-            <Avatar avatar={profile.avatar} size={36} />
+        {/* Profile greeting header */}
+        <header>
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-3"
+            aria-label="Open profile"
+          >
+            <Avatar avatar={profile.avatar} size={40} />
+            <span className="text-left">
+              <span className="block text-xs text-muted leading-tight">{greeting()},</span>
+              <span className="block font-semibold leading-tight">{profile.name}</span>
+            </span>
           </button>
         </header>
 
-        {/* Week strip */}
-        <div className="flex justify-between mt-6">
-          {weekDates.map((date) => {
-            const d = dateUtils.parseDate(date);
-            const active = date === selectedDate;
-            const isToday = date === today;
-            return (
-              <button
-                key={date}
-                onClick={() => setSelectedDate(date)}
-                className="flex flex-col items-center gap-2"
-              >
-                <span
-                  className={`relative h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
-                    active ? "text-white" : "bg-surface text-fg/80"
-                  } ${isToday && !active ? "ring-1 ring-brand" : ""}`}
-                >
-                  {active && (
-                    <motion.span
-                      layoutId="weekPill"
-                      className="absolute inset-0 rounded-full bg-brand"
-                      transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                    />
-                  )}
-                  <span className="relative">{d.getDate()}</span>
-                </span>
-                <span className={`text-[11px] ${active ? "text-fg font-medium" : "text-muted"}`}>
-                  {dateUtils.getShortDayName(d.getDay())}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Streak banner */}
-        <div className="mt-6 bg-surface rounded-2xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm font-medium">
-            🔥 {streak} Day{streak === 1 ? "" : "s"} Streak. Keep it up!
-          </span>
+        {/* Week navigation */}
+        <div className="mt-6 flex items-center justify-between">
           <button
-            onClick={() => navigate("/analytics")}
-            className="bg-brand text-white text-xs font-semibold px-4 py-2 rounded-xl"
+            onClick={() => changeWeek(-1)}
+            aria-label="Previous week"
+            className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted"
           >
-            Details
+            <Chevron dir="left" />
+          </button>
+          <div className="text-center">
+            <h1 className="text-lg font-bold">
+              {selectedDate === today
+                ? "Today"
+                : dateUtils.getDayName(dateUtils.getDayOfWeek(selectedDate))}
+            </h1>
+            <p className="text-xs text-muted mt-0.5">{prettyDate(selectedDate)}</p>
+          </div>
+          <button
+            onClick={() => changeWeek(1)}
+            aria-label="Next week"
+            className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted"
+          >
+            <Chevron dir="right" />
           </button>
         </div>
 
-        {/* Affirmation */}
-        <div className="mt-4 bg-surface rounded-2xl p-5 relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand/10" />
-          <div className="absolute right-6 bottom-2 h-16 w-16 rounded-full bg-brand/5" />
-          <p className="text-[15px] leading-relaxed font-medium relative">
-            My mind is calm, my heart is open, and my spirit is strong.
-          </p>
+        {/* Week strip (slides between weeks) */}
+        <div className="mt-5 overflow-hidden">
+          <AnimatePresence mode="wait" custom={direction} initial={false}>
+            <motion.div
+              key={weekOffset}
+              custom={direction}
+              variants={weekVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="flex justify-between"
+            >
+              {weekDates.map((date) => {
+                const d = dateUtils.parseDate(date);
+                const active = date === selectedDate;
+                const isToday = date === today;
+                return (
+                  <button
+                    key={date}
+                    onClick={() => setSelectedDate(date)}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <span
+                      className={`relative h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
+                        active ? "text-white" : "bg-surface text-fg/80"
+                      } ${isToday && !active ? "ring-1 ring-brand" : ""}`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="weekPill"
+                          className="absolute inset-0 rounded-full bg-brand"
+                          transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                        />
+                      )}
+                      <span className="relative">{d.getDate()}</span>
+                    </span>
+                    <span
+                      className={`text-[11px] ${active ? "text-fg font-medium" : "text-muted"}`}
+                    >
+                      {dateUtils.getShortDayName(d.getDay())}
+                    </span>
+                  </button>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Streak badge */}
+        <div className="mt-6 flex justify-center">
+          <StreakBadge
+            length={streak}
+            frequency="daily"
+            subtitle="streak — keep it up!"
+            icon={<AnimatedFlame />}
+            onClick={() => navigate("/analytics")}
+            className="cursor-pointer w-44"
+          />
         </div>
 
         {/* Progress ring */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <ProgressRing completed={completed} total={total} />
         </div>
 
@@ -163,6 +225,43 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Flickering flame: gentle scale/sway loop with a warm glow. */
+function AnimatedFlame() {
+  return (
+    <motion.div
+      animate={{
+        scale: [1, 1.12, 0.96, 1.08, 1],
+        rotate: [0, -4, 3, -2, 0],
+      }}
+      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+      style={{ filter: "drop-shadow(0 0 10px rgba(249, 115, 22, 0.45))" }}
+      aria-hidden="true"
+    >
+      <Flame className="h-16 w-16 text-orange-500 shrink-0" fill="currentColor" fillOpacity={0.25} />
+    </motion.div>
+  );
+}
+
+function Chevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={dir === "right" ? "rotate-180" : ""}
+    >
+      <path
+        d="M15 6l-6 6 6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
