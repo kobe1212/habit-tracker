@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import ProgressRing from "../components/ProgressRing";
 import Avatar from "../components/Avatar";
 import { useHabitStore } from "../store/HabitStore";
@@ -57,11 +58,18 @@ export default function Home() {
                 className="flex flex-col items-center gap-2"
               >
                 <span
-                  className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                    active ? "bg-brand text-white" : "bg-surface text-fg/80"
+                  className={`relative h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-300 ${
+                    active ? "text-white" : "bg-surface text-fg/80"
                   } ${isToday && !active ? "ring-1 ring-brand" : ""}`}
                 >
-                  {d.getDate()}
+                  {active && (
+                    <motion.span
+                      layoutId="weekPill"
+                      className="absolute inset-0 rounded-full bg-brand"
+                      transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                    />
+                  )}
+                  <span className="relative">{d.getDate()}</span>
                 </span>
                 <span className={`text-[11px] ${active ? "text-fg font-medium" : "text-muted"}`}>
                   {dateUtils.getShortDayName(d.getDay())}
@@ -119,11 +127,15 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {dueHabits.map((h) => {
+              {dueHabits.map((h, i) => {
                 const done = isCompleted(h.id, selectedDate);
                 return (
-                  <button
+                  <motion.button
                     key={h.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.3, ease: "easeOut" }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => !isFuture && toggleCompletion(h.id, selectedDate)}
                     disabled={isFuture}
                     className={`rounded-2xl p-4 flex items-center gap-4 text-left transition-colors disabled:opacity-50 ${
@@ -143,7 +155,7 @@ export default function Home() {
                       </p>
                     </div>
                     <CheckCircle done={done} color={h.color} />
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -157,16 +169,24 @@ export default function Home() {
 function CheckCircle({ done, color }: { done: boolean; color: string }) {
   return (
     <span
-      className="h-7 w-7 rounded-full flex items-center justify-center border-2"
+      className="h-7 w-7 rounded-full flex items-center justify-center border-2 transition-colors duration-200"
       style={{
         borderColor: done ? color : "var(--color-surface-2)",
         backgroundColor: done ? color : "transparent",
       }}
     >
       {done && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <motion.svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          initial={{ scale: 0, rotate: -30 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", bounce: 0.55, duration: 0.45 }}
+        >
           <path d="m5 12 5 5 9-11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        </motion.svg>
       )}
     </span>
   );

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useHabitStore } from "../store/HabitStore";
 import { currentStreak } from "../lib/stats";
 
@@ -23,12 +24,15 @@ export default function Habits() {
               {habits.length} active habit{habits.length === 1 ? "" : "s"}
             </p>
           </div>
-          <button
+          <motion.button
             onClick={() => navigate("/habits/new")}
+            whileHover={{ rotate: 90, scale: 1.08 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", bounce: 0.4, duration: 0.4 }}
             className="h-10 w-10 rounded-full bg-brand flex items-center justify-center text-white text-xl"
           >
             +
-          </button>
+          </motion.button>
         </header>
 
         {/* List */}
@@ -48,11 +52,15 @@ export default function Habits() {
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
-            {habits.map((h) => {
+            {habits.map((h, i) => {
               const streak = currentStreak(h, completions);
               return (
-                <button
+                <motion.button
                   key={h.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.3, ease: "easeOut" }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => navigate(`/habit/${h.id}`)}
                   className="bg-surface rounded-2xl p-4 flex items-center gap-4 text-left"
                 >
@@ -72,7 +80,7 @@ export default function Habits() {
                     </p>
                     <p className="text-[10px] text-muted">day streak</p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>

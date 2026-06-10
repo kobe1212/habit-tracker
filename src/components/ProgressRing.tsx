@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from "react";
+import { animate } from "framer-motion";
+
 interface ProgressRingProps {
   completed: number;
   total: number;
@@ -7,8 +10,8 @@ interface ProgressRingProps {
 
 /**
  * Segmented "ticked" circular progress dial inspired by the reference design.
- * Renders `ticks` small radial bars around a circle; the first `percent`
- * portion is highlighted in brand blue, the rest in dark gray.
+ * The displayed percentage counts up and the ticks fill progressively
+ * whenever the underlying value changes.
  */
 export default function ProgressRing({
   completed,
@@ -17,7 +20,23 @@ export default function ProgressRing({
   ticks = 60,
 }: ProgressRingProps) {
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const activeTicks = Math.round((percent / 100) * ticks);
+
+  const [display, setDisplay] = useState(0);
+  const displayRef = useRef(0);
+
+  useEffect(() => {
+    const controls = animate(displayRef.current, percent, {
+      duration: 0.9,
+      ease: "easeOut",
+      onUpdate: (v) => {
+        displayRef.current = v;
+        setDisplay(v);
+      },
+    });
+    return () => controls.stop();
+  }, [percent]);
+
+  const activeTicks = Math.round((display / 100) * ticks);
 
   const center = size / 2;
   const outerRadius = center - 6;
@@ -44,6 +63,7 @@ export default function ProgressRing({
               stroke={active ? "var(--color-brand)" : "var(--color-surface-2)"}
               strokeWidth={3}
               strokeLinecap="round"
+              style={{ transition: "stroke 0.2s ease" }}
             />
           );
         })}
@@ -53,7 +73,7 @@ export default function ProgressRing({
           {completed}/{total}
         </span>
         <span className="text-5xl font-bold text-fg leading-none mt-1">
-          {percent}%
+          {Math.round(display)}%
         </span>
         <span className="text-xs text-muted mt-2">Task Completed</span>
       </div>

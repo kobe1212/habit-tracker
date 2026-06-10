@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import ActivityChart, { type ChartPoint } from "../components/ActivityChart";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
@@ -133,11 +134,18 @@ export default function Analytics() {
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                range === r ? "bg-brand text-white" : "text-muted"
+              className={`relative flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 ${
+                range === r ? "text-white" : "text-muted"
               }`}
             >
-              {r}
+              {range === r && (
+                <motion.span
+                  layoutId="rangePill"
+                  className="absolute inset-0 rounded-xl bg-brand"
+                  transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+                />
+              )}
+              <span className="relative">{r}</span>
             </button>
           ))}
         </div>

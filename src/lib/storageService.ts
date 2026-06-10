@@ -3,11 +3,22 @@ import type { Habit, CompletionData } from '../types';
 const HABITS_KEY = 'habit-tracker-habits';
 const COMPLETIONS_KEY = 'habit-tracker-completions';
 
+// Corrupted or tampered localStorage must never crash the app at startup.
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return (parsed ?? fallback) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export const storageService = {
   // Habits
   getHabits: (): Habit[] => {
-    const stored = localStorage.getItem(HABITS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const habits = safeParse<Habit[]>(localStorage.getItem(HABITS_KEY), []);
+    return Array.isArray(habits) ? habits : [];
   },
 
   saveHabits: (habits: Habit[]): void => {
@@ -16,8 +27,7 @@ export const storageService = {
 
   // Completions
   getCompletions: (): CompletionData => {
-    const stored = localStorage.getItem(COMPLETIONS_KEY);
-    return stored ? JSON.parse(stored) : {};
+    return safeParse<CompletionData>(localStorage.getItem(COMPLETIONS_KEY), {});
   },
 
   saveCompletions: (completions: CompletionData): void => {
