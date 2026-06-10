@@ -98,9 +98,8 @@ export default function EditProfile() {
               <button
                 key={a}
                 onClick={() => setAvatar(a)}
-                className={`aspect-square rounded-2xl text-xl flex items-center justify-center ${
-                  avatar === a ? "bg-brand" : "bg-surface"
-                }`}
+                className={`aspect-square rounded-2xl text-xl flex items-center justify-center ${avatar === a ? "bg-brand" : "bg-surface"
+                  }`}
               >
                 {a}
               </button>
@@ -114,7 +113,7 @@ export default function EditProfile() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Alex Morgan"
+            placeholder="e.g. Amirul Haziq"
             maxLength={40}
             className="mt-2 w-full bg-surface rounded-2xl px-4 py-3.5 text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-brand"
           />
