@@ -8,14 +8,8 @@ import { StreakBadge } from "@/components/ui/streak-badge";
 import { useHabitStore } from "../store/HabitStore";
 import { useProfile } from "../store/ProfileStore";
 import { dateUtils } from "../lib/dateUtils";
+import { formatLongDate } from "../lib/format";
 import { habitsDueOn, dayProgress, bestCurrentStreak } from "../lib/stats";
-
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function prettyDate(dateStr: string): string {
-  const d = dateUtils.parseDate(dateStr);
-  return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-}
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -91,7 +85,7 @@ export default function Home() {
                 ? "Today"
                 : dateUtils.getDayName(dateUtils.getDayOfWeek(selectedDate))}
             </h1>
-            <p className="text-xs text-muted mt-0.5">{prettyDate(selectedDate)}</p>
+            <p className="text-xs text-muted mt-0.5">{formatLongDate(selectedDate)}</p>
           </div>
           <button
             onClick={() => changeWeek(1)}

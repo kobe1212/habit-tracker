@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
+import { MONTHS_SHORT, formatLongDate } from "../lib/format";
 import CountUp from "../components/CountUp";
+import ScreenHeader from "../components/ScreenHeader";
 import YearBarChart, { type YearBar } from "../components/YearBarChart";
 import {
   isHabitDue,
@@ -12,8 +14,6 @@ import {
   longestStreak,
   monthlyConsistency,
 } from "../lib/stats";
-
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const calendarVariants = {
   enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
@@ -84,16 +84,7 @@ export default function HabitDetail() {
   return (
     <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-bold">Habit Detail</h1>
-          <span className="w-9" />
-        </header>
+        <ScreenHeader title="Habit Detail" />
 
         {/* Title row */}
         <div className="flex items-start justify-between mt-6 gap-3">
@@ -103,10 +94,7 @@ export default function HabitDetail() {
             </span>
             <div>
               <h2 className="text-xl font-bold leading-tight">{habit.name}</h2>
-              <p className="text-sm text-brand mt-1">
-                Start from {MONTHS_SHORT[dateUtils.parseDate(created).getMonth()]}{" "}
-                {dateUtils.parseDate(created).getDate()}, {dateUtils.parseDate(created).getFullYear()}
-              </p>
+              <p className="text-sm text-brand mt-1">Start from {formatLongDate(created)}</p>
             </div>
           </div>
           <button onClick={() => navigate(`/habit/${habit.id}/edit`)} className="bg-surface text-sm font-semibold px-4 py-2 rounded-xl shrink-0">

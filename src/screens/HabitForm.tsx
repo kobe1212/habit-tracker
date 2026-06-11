@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHabitStore } from "../store/HabitStore";
+import ScreenHeader from "../components/ScreenHeader";
 import type { Frequency } from "../types";
 
 const COLORS = ["#3b82f6", "#06b6d4", "#8b5cf6", "#10b981", "#ef4444", "#f97316", "#eab308", "#ec4899"];
@@ -61,19 +62,7 @@ export default function HabitForm() {
   return (
     <div className="flex flex-col h-full text-fg">
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28">
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-muted"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-bold">{editing ? "Edit Habit" : "New Habit"}</h1>
-          <span className="w-9" />
-        </header>
+        <ScreenHeader title={editing ? "Edit Habit" : "New Habit"} />
 
         {/* Preview */}
         <div className="mt-6 flex flex-col items-center gap-3">

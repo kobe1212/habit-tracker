@@ -2,12 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useHabitStore } from "../store/HabitStore";
 import { currentStreak } from "../lib/stats";
-
-function frequencyLabel(frequency: "daily" | number[]): string {
-  if (frequency === "daily") return "Every day";
-  const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  return frequency.map((d) => names[d]).join(", ");
-}
+import { frequencyLabel } from "../lib/format";
 
 export default function Habits() {
   const navigate = useNavigate();
