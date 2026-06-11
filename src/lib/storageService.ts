@@ -14,6 +14,16 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   }
 }
 
+// Writes can throw (e.g. QuotaExceededError when storage is full or in private
+// mode). Swallow the failure so the in-memory state stays usable for the session.
+function safeWrite(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`Failed to persist "${key}" to localStorage:`, err);
+  }
+}
+
 export const storageService = {
   // Habits
   getHabits: (): Habit[] => {
@@ -22,7 +32,7 @@ export const storageService = {
   },
 
   saveHabits: (habits: Habit[]): void => {
-    localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+    safeWrite(HABITS_KEY, habits);
   },
 
   // Completions
@@ -31,7 +41,7 @@ export const storageService = {
   },
 
   saveCompletions: (completions: CompletionData): void => {
-    localStorage.setItem(COMPLETIONS_KEY, JSON.stringify(completions));
+    safeWrite(COMPLETIONS_KEY, completions);
   },
 
   // Utility

@@ -4,6 +4,7 @@ import ActivityChart, { type ChartPoint } from "../components/ActivityChart";
 import CountUp from "../components/CountUp";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
+import { MONTHS_SHORT, formatDayLabel } from "../lib/format";
 import {
   completionCountOnDate,
   isHabitDue,
@@ -13,7 +14,6 @@ import type { Habit, CompletionData } from "../types";
 
 const ranges = ["Week", "Month", "Year"] as const;
 type Range = (typeof ranges)[number];
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 interface Analytics {
   chart: ChartPoint[];
@@ -25,11 +25,6 @@ interface Analytics {
   periodTitle: string;
   topHabit: Habit | null;
   topCount: number;
-}
-
-function fullDayLabel(dateStr: string): string {
-  const d = dateUtils.parseDate(dateStr);
-  return `${dateUtils.getShortDayName(d.getDay())}, ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
 }
 
 function buildAnalytics(
@@ -49,7 +44,7 @@ function buildAnalytics(
     for (const d of week) {
       chart.push({
         label: dateUtils.getShortDayName(dateUtils.getDayOfWeek(d)),
-        fullLabel: fullDayLabel(d),
+        fullLabel: formatDayLabel(d),
         value: completionCountOnDate(completions, d),
       });
     }
@@ -63,7 +58,7 @@ function buildAnalytics(
     for (const d of dates) {
       chart.push({
         label: String(dateUtils.parseDate(d).getDate()),
-        fullLabel: fullDayLabel(d),
+        fullLabel: formatDayLabel(d),
         value: completionCountOnDate(completions, d),
       });
     }
