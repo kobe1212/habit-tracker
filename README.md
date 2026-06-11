@@ -3,14 +3,46 @@
 A motivational personal-development app for building and maintaining habits. Users define
 habits, mark them complete on a calendar, and watch their progress through streaks, monthly
 consistency, and an analytics dashboard — all wrapped in a dark, mobile-first UI with fluid
-animations.
+animations. It is also an **installable, offline-capable Progressive Web App (PWA)** — install it
+on your phone or computer and it behaves like a native app, no app store required.
 
 - **Live demo:** https://habit-tracker-zeta-lake.vercel.app/
 - **Repository:** https://github.com/kobe1212/habit-tracker
 
-> Data is stored locally in your browser (no account, no backend). The deployed app seeds a few
-> sample habits on first visit so the dashboards have something to show — use **Profile → Reset
+> Data is stored locally in your browser/device (no account, no backend). The deployed app seeds a
+> few sample habits on first visit so the dashboards have something to show — use **Profile → Reset
 > Demo Data** to start fresh.
+
+---
+
+## Install as an app (PC, Android, iOS)
+
+Because it is a PWA, you can install it straight from the browser — it then opens in its own window,
+works offline, and shows up with its own icon. **First, open the live demo:**
+https://habit-tracker-zeta-lake.vercel.app/
+
+### On a PC (Windows / macOS / Linux — Chrome or Edge)
+1. Open the live demo in **Chrome** or **Edge**.
+2. Click the **install icon** (a monitor with a down-arrow) at the right end of the address bar.
+   - No icon? Open the **⋮** menu → **Cast, save, and share** / **Apps** → **Install Habit Tracker…**
+3. Click **Install**. It opens in its own window and adds a desktop / Start-menu / Launchpad shortcut.
+
+*(Safari on macOS 16+: open the site, then **File → Add to Dock**.)*
+
+### On Android (Chrome)
+1. Open the live demo in **Chrome**.
+2. Tap the **⋮** menu → **Add to Home screen** (or **Install app**).
+3. Tap **Install / Add**. The icon lands on your home screen and launches fullscreen.
+
+### On iPhone / iPad (Safari)
+> iOS only allows installing PWAs through **Safari** — Chrome on iOS won't show the option.
+1. Open the live demo in **Safari**.
+2. Tap the **Share** button (the square with an up-arrow).
+3. Scroll down and tap **Add to Home Screen**, then **Add**.
+4. Launch it from the new home-screen icon — it runs fullscreen, like a native app.
+
+Once installed it works **offline** (the app shell and fonts are cached), and it auto-updates to the
+latest version the next time you open it online.
 
 ---
 
@@ -24,17 +56,21 @@ year-to-date chart and a clickable month calendar.
 
 ### Features
 
-- **Today / Home** — greeting header, a swipeable week strip (navigate weeks), a per-day progress
-  dial, and a tap-to-complete habit checklist for the selected day.
+- **Today / Home** — profile greeting, a sliding week strip with previous/next week navigation, a
+  per-day progress dial that counts up, an animated streak banner with a "living" flame, and a
+  tap-to-complete habit checklist for the selected day.
 - **Habits** — create / edit / delete habits (name, emoji icon, color, daily or specific-weekday
   frequency); each row shows its current streak.
 - **Habit Detail** — current & longest streak, this-month consistency, an interactive **Year to
-  Date** bar chart (hover for exact values, click a month to jump the calendar), and a monthly
-  **calendar** with success/skipped/today states you can toggle.
-- **Analytics** — **Week / Month / Year** scoped summary (completions, active days, consistency),
-  an **Activity Rate Over Time** line chart with a numeric axis and hover tooltips, and a Top Habit.
-- **Profile** — editable name + avatar (upload a photo or pick an emoji), a working **Dark/Light**
-  toggle, and a real browser **Notifications** opt-in.
+  Date** bar chart (hover for exact values, click a month to slide the calendar to it), and a
+  monthly **calendar** with success / skipped / today states you can toggle.
+- **Analytics** — **Week / Month / Year** scoped summary (completions, active days, consistency
+  with clear denominators), an **Activity Rate Over Time** chart with a numeric axis and hover
+  tooltips, and a Top Habit — all animating between ranges.
+- **Profile** — editable name + avatar (upload a photo or pick an emoji), a working **Dark / Light**
+  theme toggle, and a real browser **Notifications** opt-in.
+- **Installable PWA** — add to home screen / install on desktop, works offline, with an animated
+  expandable bottom navigation.
 
 ---
 
@@ -48,6 +84,8 @@ year-to-date chart and a clickable month calendar.
 | **framer-motion** | Page transitions, the segmented progress dial, count-ups, the living streak flame, and the sliding nav/calendar — the "modern, alive" feel. |
 | **react-router** | Clean multi-screen navigation with deep-linkable routes. |
 | **localStorage** | Zero-backend persistence — instant, offline-capable, and no accounts to manage for a single-user personal tool. |
+| **vite-plugin-pwa (Workbox)** | Generates the service worker + web manifest for offline use and installability. |
+| **@vercel/analytics + speed-insights** | Production observability — page views and Core Web Vitals. |
 | **lucide-react / class-variance-authority** | Icons and variant styling for the shadcn-style UI primitives (`components/ui`). |
 | **Vercel** | One-click Git-connected deploys, automatic builds on push, and a global CDN. |
 | **Claude Code (Opus)** | The app was built conversationally with Claude Code as the engineering agent — planning, implementing, verifying in a browser preview, and committing. |
@@ -64,7 +102,9 @@ software-engineering loop rather than one-shot generation:
 2. **Front-end first** — all screens were built with mock data to lock in the visual design
    (driven by reference images) before any logic.
 3. **Wire real data** — the mock arrays were replaced by a single source of truth.
-4. **Polish** — theming, animations, and interaction details were layered on last.
+4. **Polish** — theming, animations, and interaction details were layered on.
+5. **Ship & harden** — deploy to Vercel, turn it into an installable PWA, add analytics, and
+   refactor for maintainability (shared utilities, an error boundary).
 
 Each step ended the same way: **build → verify in a live browser preview → commit with a clean
 message → push to GitHub.**
@@ -77,10 +117,14 @@ message → push to GitHub.**
 - **Data model:** `Habit { id, name, color, icon, frequency, createdAt }` and
   `CompletionData { [date]: { [habitId]: boolean } }`.
 - **Pure logic layer:** `src/lib/stats.ts` (current/longest streak, monthly consistency, weekly
-  activity, totals) and `src/lib/dateUtils.ts` (timezone-safe local date helpers). Keeping the math
+  activity, totals), `src/lib/dateUtils.ts` (timezone-safe local date helpers), and
+  `src/lib/format.ts` / `src/lib/chart.ts` (shared formatting + chart helpers). Keeping the math
   pure made it easy to reason about and reuse across every screen.
-- **UI:** screens in `src/screens`, reusable pieces in `src/components`, and shadcn-style primitives
-  in `src/components/ui` (`expandable-tabs`, `streak-badge`).
+- **UI:** screens in `src/screens`, reusable pieces in `src/components` (incl. a shared
+  `ScreenHeader` and an `ErrorBoundary`), and shadcn-style primitives in `src/components/ui`
+  (`expandable-tabs`, `streak-badge`).
+- **PWA:** `vite-plugin-pwa` generates the service worker + `manifest.webmanifest`; the SW is
+  registered from `src/main.tsx`. Icons live in `public/` (generated by `scripts/generate-icons.mjs`).
 
 ---
 
@@ -137,6 +181,20 @@ Make the Year-to-Date chart interactive — hover for values, click a month to o
 Plan and deploy the app to Vercel via GitHub integration, and write the full assessment README.
 ```
 
+**8 — Make it an installable PWA**
+```
+Turn the app into an installable, offline-capable PWA. Generate a modern app icon set, add a web
+manifest and a service worker (vite-plugin-pwa) that precaches the app shell, and keep the strict
+Content-Security-Policy intact (no inline scripts).
+```
+
+**9 — Observability + maintainability**
+```
+Add Vercel Web Analytics and Speed Insights for production monitoring. Then refactor for
+maintainability: extract the duplicated formatting/chart/header code into shared modules, and add
+reliability guards (safe localStorage writes and a React error boundary). Open it as a pull request.
+```
+
 ---
 
 ## 5. Instructions — Run & Reproduce
@@ -154,13 +212,14 @@ npm install
 # 3. Run the dev server (http://localhost:5173)
 npm run dev
 
-# 4. Production build + local preview
+# 4. Production build + local preview (the service worker only runs in a build)
 npm run build
 npm run preview
 ```
 
 On first load the app seeds sample habits. To clear everything and start with your own data, go to
-**Profile → Reset Demo Data**.
+**Profile → Reset Demo Data**. To regenerate the PWA icons after editing the design, run
+`node scripts/generate-icons.mjs`.
 
 ### Deploy your own (Vercel)
 
@@ -171,7 +230,8 @@ On first load the app seeds sample habits. To clear everything and start with yo
 4. **Deploy.** Every push to `master` then auto-deploys.
 
 `vercel.json` adds an SPA rewrite (so deep links like `/analytics` survive a refresh) and a set of
-security headers (CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`).
+security headers (a strict CSP plus `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`,
+`Permissions-Policy`).
 
 ---
 
@@ -194,6 +254,13 @@ security headers (CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Opt
   project's strict TS config — plus mapping the shadcn color tokens onto this app's theme tokens.
 - **SPA routing on a static host.** Client-side deep links 404 on refresh on a plain static host;
   added a catch-all rewrite to `index.html` in `vercel.json`.
+- **PWA under a strict CSP.** The service-worker registration was kept out of the HTML (registered
+  from `main.tsx` via `virtual:pwa-register`) so no inline `<script>` is emitted, keeping
+  `script-src 'self'` intact; the CSP was widened only enough to cache Google Fonts and report
+  Vercel insights.
+- **Reliability hardening.** `localStorage` reads/writes are wrapped so corrupted data or a quota
+  error can't crash startup, and a top-level `ErrorBoundary` turns any render crash into a
+  recoverable "Reload" screen instead of a blank page.
 
 ---
 
