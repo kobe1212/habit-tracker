@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHabitStore } from "../store/HabitStore";
 import ScreenHeader from "../components/ScreenHeader";
+import { CATEGORIES } from "../lib/categories";
 import type { Frequency } from "../types";
 
 const COLORS = ["#3b82f6", "#06b6d4", "#8b5cf6", "#10b981", "#ef4444", "#f97316", "#eab308", "#ec4899"];
@@ -26,6 +27,7 @@ export default function HabitForm() {
   const [name, setName] = useState(editing?.name ?? "");
   const [color, setColor] = useState(editing?.color ?? COLORS[0]);
   const [icon, setIcon] = useState(editing?.icon ?? ICONS[0]);
+  const [category, setCategory] = useState(editing?.category ?? CATEGORIES[0].id);
   const [isDaily, setIsDaily] = useState(
     editing ? editing.frequency === "daily" : true
   );
@@ -44,10 +46,10 @@ export default function HabitForm() {
     if (!canSave) return;
     const frequency: Frequency = isDaily ? "daily" : days;
     if (editing) {
-      updateHabit(editing.id, { name: name.trim(), color, icon, frequency });
+      updateHabit(editing.id, { name: name.trim(), color, icon, frequency, category });
       navigate(`/habit/${editing.id}`);
     } else {
-      addHabit({ name: name.trim(), color, icon, frequency });
+      addHabit({ name: name.trim(), color, icon, frequency, category });
       navigate("/habits");
     }
   };
@@ -101,6 +103,32 @@ export default function HabitForm() {
                 {ic}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Category */}
+        <div className="mt-6">
+          <span className="text-sm font-semibold">Category</span>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {CATEGORIES.map((c) => {
+              const selected = category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCategory(c.id)}
+                  className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                    selected ? "text-white" : "bg-surface text-muted"
+                  }`}
+                  style={selected ? { backgroundColor: c.color } : undefined}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: selected ? "#fff" : c.color }}
+                  />
+                  {c.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 

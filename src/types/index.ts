@@ -7,6 +7,8 @@ export interface Habit {
   icon: string;
   frequency: Frequency;
   createdAt: string;
+  /** Category id (see lib/categories). Optional for backward compatibility. */
+  category?: string;
 }
 
 export interface CompletionData {
