@@ -34,6 +34,16 @@ export default defineConfig({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
+            urlPattern: /\/media\/.*\.(?:mp4|mp3)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'media-assets',
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+              rangeRequests: true,
+            },
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'google-fonts-stylesheets' },
