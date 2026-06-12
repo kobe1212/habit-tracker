@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useHabitStore } from "../store/HabitStore";
 import { dateUtils } from "../lib/dateUtils";
 import { MONTHS_SHORT, formatLongDate } from "../lib/format";
+import { getCategory } from "../lib/categories";
 import CountUp from "../components/CountUp";
 import ScreenHeader from "../components/ScreenHeader";
 import YearBarChart, { type YearBar } from "../components/YearBarChart";
@@ -43,6 +44,7 @@ export default function HabitDetail() {
   }
 
   const today = dateUtils.today();
+  const category = getCategory(habit.category);
   const created = dateUtils.formatDate(new Date(habit.createdAt));
   const cur = currentStreak(habit, completions, today);
   const longest = longestStreak(habit, completions, today);
@@ -94,7 +96,14 @@ export default function HabitDetail() {
             </span>
             <div>
               <h2 className="text-xl font-bold leading-tight">{habit.name}</h2>
-              <p className="text-sm text-brand mt-1">Start from {formatLongDate(created)}</p>
+              <span
+                className="inline-flex items-center gap-1.5 mt-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                style={{ backgroundColor: `${category.color}22`, color: category.color }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: category.color }} />
+                {category.name}
+              </span>
+              <p className="text-sm text-brand mt-1.5">Start from {formatLongDate(created)}</p>
             </div>
           </div>
           <button onClick={() => navigate(`/habit/${habit.id}/edit`)} className="bg-surface text-sm font-semibold px-4 py-2 rounded-xl shrink-0">

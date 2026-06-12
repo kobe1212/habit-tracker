@@ -120,6 +120,7 @@ interface SeedSpec {
   name: string;
   color: string;
   icon: string;
+  category: string;
   frequency: Frequency;
   daysAgoCreated: number;
   /** probability a due day is marked complete */
@@ -127,10 +128,10 @@ interface SeedSpec {
 }
 
 const SEED_SPECS: SeedSpec[] = [
-  { name: "Morning Run", color: "#3b82f6", icon: "🏃", frequency: "daily", daysAgoCreated: 90, reliability: 0.85 },
-  { name: "Drink Water", color: "#06b6d4", icon: "💧", frequency: "daily", daysAgoCreated: 60, reliability: 0.7 },
-  { name: "Read a Book", color: "#8b5cf6", icon: "📖", frequency: [1, 3, 5], daysAgoCreated: 45, reliability: 0.8 },
-  { name: "Meditate", color: "#10b981", icon: "🧘", frequency: "daily", daysAgoCreated: 120, reliability: 0.9 },
+  { name: "Morning Run", color: "#3b82f6", icon: "🏃", category: "fitness", frequency: "daily", daysAgoCreated: 90, reliability: 0.85 },
+  { name: "Drink Water", color: "#06b6d4", icon: "💧", category: "health", frequency: "daily", daysAgoCreated: 60, reliability: 0.7 },
+  { name: "Read a Book", color: "#8b5cf6", icon: "📖", category: "mind", frequency: [1, 3, 5], daysAgoCreated: 45, reliability: 0.8 },
+  { name: "Meditate", color: "#10b981", icon: "🧘", category: "personal", frequency: "daily", daysAgoCreated: 120, reliability: 0.9 },
 ];
 
 function buildSeed(): { habits: Habit[]; completions: CompletionData } {
@@ -145,6 +146,7 @@ function buildSeed(): { habits: Habit[]; completions: CompletionData } {
       name: spec.name,
       color: spec.color,
       icon: spec.icon,
+      category: spec.category,
       frequency: spec.frequency,
       createdAt: new Date(created + "T09:00:00").toISOString(),
     };
