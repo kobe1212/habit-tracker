@@ -9,7 +9,9 @@ import { useHabitStore } from "../store/HabitStore";
 import { useProfile } from "../store/ProfileStore";
 import { dateUtils } from "../lib/dateUtils";
 import { formatLongDate } from "../lib/format";
-import { habitsDueOn, dayProgress, bestCurrentStreak } from "../lib/stats";
+import { habitsDueOn, dayProgress, bestCurrentStreak, currentStreak } from "../lib/stats";
+import { FireStreakPopup, ConfettiPopup } from "../components/Celebrations";
+import type { Habit } from "../types";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -51,6 +53,24 @@ export default function Home() {
   const { completed, total } = dayProgress(habits, completions, selectedDate);
   const streak = bestCurrentStreak(habits, completions, today);
   const isFuture = selectedDate > today;
+
+  const [celebration, setCelebration] = useState<
+    { type: "fire"; streak: number } | { type: "confetti" } | null
+  >(null);
+
+  const handleToggle = (habit: Habit) => {
+    if (isFuture) return;
+    const wasCompleted = isCompleted(habit.id, selectedDate);
+    toggleCompletion(habit.id, selectedDate);
+    // Only celebrate when completing (not un-checking) a habit on today.
+    if (wasCompleted || selectedDate !== today) return;
+    const completedAfter = completed + 1;
+    if (total > 0 && completedAfter === total) {
+      setCelebration({ type: "confetti" });
+    } else {
+      setCelebration({ type: "fire", streak: currentStreak(habit, completions, today) + 1 });
+    }
+  };
 
   return (
     <div className="flex flex-col h-full text-fg">
@@ -193,7 +213,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.06, duration: 0.3, ease: "easeOut" }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => !isFuture && toggleCompletion(h.id, selectedDate)}
+                    onClick={() => handleToggle(h)}
                     disabled={isFuture}
                     className={`rounded-2xl p-4 flex items-center gap-4 text-left transition-colors disabled:opacity-50 ${
                       done ? "bg-brand/15 ring-1 ring-brand/40" : "bg-surface"
@@ -219,6 +239,15 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {celebration?.type === "fire" && (
+          <FireStreakPopup streak={celebration.streak} onDone={() => setCelebration(null)} />
+        )}
+        {celebration?.type === "confetti" && (
+          <ConfettiPopup onDone={() => setCelebration(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

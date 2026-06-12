@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
@@ -5,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import type { ReactNode } from "react";
 import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
+import SplashScreen from "./components/SplashScreen";
 import { HabitStoreProvider } from "./store/HabitStore";
 import { ThemeProvider } from "./store/ThemeProvider";
 import { ProfileProvider } from "./store/ProfileStore";
@@ -51,6 +53,7 @@ function AnimatedRoutes() {
 }
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false);
   return (
     <ThemeProvider>
       <ProfileProvider>
@@ -59,6 +62,7 @@ function App() {
             <PhoneFrame>
               <AnimatedRoutes />
               <BottomNav />
+              {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
             </PhoneFrame>
             <VercelAnalytics />
             <SpeedInsights />
