@@ -8,7 +8,7 @@ function playSound(src: string) {
   try {
     const audio = new Audio(src);
     audio.volume = 0.7;
-    void audio.play().catch(() => {});
+    void audio.play().catch(() => { });
   } catch {
     /* audio is best-effort */
   }
@@ -16,10 +16,18 @@ function playSound(src: string) {
 
 /** Renders a one-shot Lottie animation via the hook API (avoids the
  *  default-export interop issue with the <Lottie> component under Vite). */
-function LottieBox({ data, className }: { data: unknown; className?: string }) {
+function LottieBox({
+  data,
+  className,
+  loop = false,
+}: {
+  data: unknown;
+  className?: string;
+  loop?: boolean;
+}) {
   const { View } = useLottie({
     animationData: data,
-    loop: false,
+    loop,
     autoplay: true,
   });
   return <div className={className}>{View}</div>;
@@ -47,8 +55,8 @@ export function FireStreakPopup({ streak, onDone }: { streak: number; onDone: ()
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", bounce: 0.5, duration: 0.6 }}
       >
-        <LottieBox data={fireAnim} className="h-44 w-44" />
-        <p className="mt-2 text-3xl font-extrabold text-fg">{streak} day streak!</p>
+        <LottieBox data={fireAnim} className="h-44 w-44" loop />
+        <p className="mt-16 text-3xl font-extrabold text-fg">{streak} day streak!</p>
         <p className="mt-1 text-sm text-muted">Keep the fire going</p>
       </motion.div>
     </motion.div>
@@ -59,7 +67,7 @@ export function FireStreakPopup({ streak, onDone }: { streak: number; onDone: ()
 export function ConfettiPopup({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     playSound("/media/confetti.mp3");
-    const t = setTimeout(onDone, 3800);
+    const t = setTimeout(onDone, 2600);
     return () => clearTimeout(t);
   }, [onDone]);
 
@@ -81,9 +89,9 @@ export function ConfettiPopup({ onDone }: { onDone: () => void }) {
         <span className="text-5xl">🎉</span>
         <p className="mt-3 text-2xl font-extrabold text-fg">All habits done!</p>
         <p className="mt-1 text-sm text-muted">You completed everything today.</p>
-        <button onClick={onDone} className="mt-5 bg-brand text-white font-semibold px-6 py-3 rounded-2xl">
+        {/* <button onClick={onDone} className="mt-5 bg-brand text-white font-semibold px-6 py-3 rounded-2xl">
           Nice!
-        </button>
+        </button> */}
       </motion.div>
     </motion.div>
   );
