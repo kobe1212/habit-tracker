@@ -3,8 +3,10 @@
 A motivational personal-development app for building and maintaining habits. Users define
 habits, mark them complete on a calendar, and watch their progress through streaks, monthly
 consistency, and an analytics dashboard — all wrapped in a dark, mobile-first UI with fluid
-animations. It is also an **installable, offline-capable Progressive Web App (PWA)** — install it
-on your phone or computer and it behaves like a native app, no app store required.
+animations and **Duolingo-style celebrations** (a flame burst on a growing streak, confetti when
+the day is fully done) plus a branded **launch splash**. It is also an **installable,
+offline-capable Progressive Web App (PWA)** — install it on your phone or computer and it behaves
+like a native app, no app store required.
 
 - **Live demo:** https://habit-tracker-zeta-lake.vercel.app/
 - **Repository:** https://github.com/kobe1212/habit-tracker
@@ -60,7 +62,8 @@ year-to-date chart and a clickable month calendar.
   per-day progress dial that counts up, an animated streak banner with a "living" flame, and a
   tap-to-complete habit checklist for the selected day.
 - **Habits** — create / edit / delete habits (name, emoji icon, color, daily or specific-weekday
-  frequency); each row shows its current streak.
+  frequency, and a **category**); each row shows its category tag and current streak, and a sliding
+  chip-bar filters the list by category (Health, Fitness, Mind, Work, Personal).
 - **Habit Detail** — current & longest streak, this-month consistency, an interactive **Year to
   Date** bar chart (hover for exact values, click a month to slide the calendar to it), and a
   monthly **calendar** with success / skipped / today states you can toggle.
@@ -69,6 +72,10 @@ year-to-date chart and a clickable month calendar.
   tooltips, and a Top Habit — all animating between ranges.
 - **Profile** — editable name + avatar (upload a photo or pick an emoji), a working **Dark / Light**
   theme toggle, and a real browser **Notifications** opt-in.
+- **Celebrations** — a looping flame burst + sound when completing a habit that extends a streak,
+  and a confetti burst + sound when every habit for the day is done (Lottie animations + audio,
+  Duolingo-style overlays that blend over the Home screen).
+- **Launch splash** — a short branded video plays full-screen on open, then fades into the app.
 - **Installable PWA** — add to home screen / install on desktop, works offline, with an animated
   expandable bottom navigation.
 
@@ -82,6 +89,7 @@ year-to-date chart and a clickable month calendar.
 | **TypeScript** | The streak / consistency / date logic is easy to get subtly wrong; static types caught real bugs (e.g. an off-by-one timezone issue) early. |
 | **Tailwind CSS v4** | Rapid, consistent styling with CSS-variable design tokens, which made the dark/light theming a token swap rather than a rewrite. |
 | **framer-motion** | Page transitions, the segmented progress dial, count-ups, the living streak flame, and the sliding nav/calendar — the "modern, alive" feel. |
+| **lottie-react** | Plays the vector flame + confetti celebration animations (via the `useLottie` hook). |
 | **react-router** | Clean multi-screen navigation with deep-linkable routes. |
 | **localStorage** | Zero-backend persistence — instant, offline-capable, and no accounts to manage for a single-user personal tool. |
 | **vite-plugin-pwa (Workbox)** | Generates the service worker + web manifest for offline use and installability. |
@@ -105,6 +113,8 @@ software-engineering loop rather than one-shot generation:
 4. **Polish** — theming, animations, and interaction details were layered on.
 5. **Ship & harden** — deploy to Vercel, turn it into an installable PWA, add analytics, and
    refactor for maintainability (shared utilities, an error boundary).
+6. **Delight** — habit categories with a filter, plus motivational moments: a launch splash video
+   and Lottie + sound celebrations for streaks and full-day completion.
 
 Each step ended the same way: **build → verify in a live browser preview → commit with a clean
 message → push to GitHub.**
@@ -121,10 +131,15 @@ message → push to GitHub.**
   `src/lib/format.ts` / `src/lib/chart.ts` (shared formatting + chart helpers). Keeping the math
   pure made it easy to reason about and reuse across every screen.
 - **UI:** screens in `src/screens`, reusable pieces in `src/components` (incl. a shared
-  `ScreenHeader` and an `ErrorBoundary`), and shadcn-style primitives in `src/components/ui`
-  (`expandable-tabs`, `streak-badge`).
+  `ScreenHeader`, an `ErrorBoundary`, a `SplashScreen`, and `Celebrations`), and shadcn-style
+  primitives in `src/components/ui` (`expandable-tabs`, `streak-badge`). Category presets live in
+  `src/lib/categories.ts`.
+- **Media:** the splash video and celebration sounds live in `public/media/`, the Lottie JSON in
+  `src/assets/lottie/`. (Assets must go in `public/`, not the build output `dist/`, which is
+  regenerated on every build.)
 - **PWA:** `vite-plugin-pwa` generates the service worker + `manifest.webmanifest`; the SW is
-  registered from `src/main.tsx`. Icons live in `public/` (generated by `scripts/generate-icons.mjs`).
+  registered from `src/main.tsx`. Icons live in `public/` (generated by `scripts/generate-icons.mjs`),
+  and `/media/*` video/audio is runtime-cached so the splash isn't re-downloaded each launch.
 
 ---
 
@@ -195,6 +210,20 @@ maintainability: extract the duplicated formatting/chart/header code into shared
 reliability guards (safe localStorage writes and a React error boundary). Open it as a pull request.
 ```
 
+**10 — Habit categories**
+```
+Add habit categories: a preset, color-coded category per habit (Health, Fitness, Mind, Work,
+Personal) chosen in the form, shown as a tag on habit rows and the detail screen, and a sliding
+filter chip-bar on the Habits list. Keep existing saved habits working (treat as Uncategorized).
+```
+
+**11 — Celebrations + splash**
+```
+Add Duolingo-style celebrations using the provided Lottie files and sounds: a flame burst + sound
+when a completion extends a streak, and a confetti burst + sound when all of the day's habits are
+done. Also add a launch splash that plays a video on open, then fades into the app.
+```
+
 ---
 
 ## 5. Instructions — Run & Reproduce
@@ -261,6 +290,13 @@ security headers (a strict CSP plus `X-Content-Type-Options`, `Referrer-Policy`,
 - **Reliability hardening.** `localStorage` reads/writes are wrapped so corrupted data or a quota
   error can't crash startup, and a top-level `ErrorBoundary` turns any render crash into a
   recoverable "Reload" screen instead of a blank page.
+- **Lottie default-export crash.** Under Vite, `lottie-react`'s default `<Lottie>` component
+  resolved to an object and crashed the celebration overlay — the `ErrorBoundary` caught it (no
+  white screen), and switching to the `useLottie` hook fixed it.
+- **Splash black screen (`public/` vs `dist/` + codec).** A black splash traced to two things: the
+  video was dropped into the throwaway `dist/media` (the dev server reads `public/`, and `dist/` is
+  rebuilt every time), and iPhone videos are often HEVC/H.265 which browsers can't decode. Fix:
+  keep media in `public/media/` and use an H.264 (`avc1`) MP4.
 
 ---
 
