@@ -34,7 +34,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
           onClick={() => setVisible(false)}
         >
           <video
-            src="/media/splash.mp4"
+            src="/media/Splash_v1.mp4"
             autoPlay
             muted
             playsInline
